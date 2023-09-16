@@ -5,12 +5,12 @@ from core.engine import Value
 
 class Neuron:
     def __init__(self, num_inputs: int):
-        self.weights = [Value(np.random.uniform(-1,1)) for _ in range(num_inputs)]
-        self.bias = Value(np.random.uniform(-1, 1))
+        self.weights = [Value(np.random.normal()) for _ in range(num_inputs)]
+        self.bias = Value(np.random.normal())
         self.parameters = self.weights + [self.bias]
 
     def __call__(self, x):
-        act = np.dot(np.array(self.weights), x) + self.bias
+        act = sum((wi*xi for wi, xi in zip(self.weights, x)), self.bias)
         out = act.tanh()
         return out
 

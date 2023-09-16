@@ -22,8 +22,8 @@ class Value:
         out = Value(data=data, label=label, _children=(self, other), _op='+')
 
         def _backward():
-            self.grad += 1.0 * out.grad
-            other.grad += 1.0 * out.grad
+            self.grad += out.grad
+            other.grad += out.grad
         out._backward = _backward
 
         return out
@@ -74,9 +74,12 @@ class Value:
     def __rtruediv__(self, other):
         return other * self**-1
 
+    def __lt__(self, other):
+        return self.data < other.data
+
     def exp(self):
         x = self.data
-        data = math.exp(x)
+        data = np.exp(x)
         label = f"exp({self.label})"
         out = Value(data=data, label=label, _children=(self,), _op='exp')
 
@@ -88,7 +91,7 @@ class Value:
 
     def tanh(self):
         x = self.data
-        data = (math.exp(2 * x) - 1) / (math.exp(2 * x) + 1)
+        data = (np.exp(2 * x) - 1) / (np.exp(2 * x) + 1)
         label = f"tanh({self.label})"
         out = Value(data=data, label=label, _children=(self,), _op='tanh')
 
@@ -106,6 +109,18 @@ class Value:
 
         def _backward():
             self.grad += (out.data > 0) * out.grad
+        out._backward = _backward
+
+        return out
+
+    def sigmoid(self):
+        x = self.data
+        data = 1 / (1 + math.exp(-x))
+        label = f"sigmoid({self.label})"
+        out = Value(data=data, label=label, _children=(self,), _op='sigmoid')
+
+        def _backward():
+            self.grad += (data * 1 - data) * out.grad
         out._backward = _backward
 
         return out

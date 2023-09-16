@@ -20,10 +20,11 @@ class TestNN(TestCase):
         ]
         ys = [1.0, -1.0, -1.0, 1.0]  # desired targets
 
-        for k in range(100):
+        for k in range(10):
 
             # forward pass
             ypred = [n(x) for x in xs]
+            print(f"ypred: {len(ypred)}")
             loss = sum((yout - ygt) ** 2 for ygt, yout in zip(ys, ypred))
 
             # backward pass
@@ -37,6 +38,7 @@ class TestNN(TestCase):
             if k % 10 == 0:
                 print(k, loss.data)
         print(ypred)
+        print(xs[0])
 
 
 class TestNeuron(TestCase):
