@@ -1,25 +1,20 @@
-import math
-
 import numpy as np
 
 
 class Value:
-    def __init__(self, data: float, label='', _children=(), _op='', ):
+    def __init__(self, data: float, _children=()):
         self.data = data
         self.grad = 0.0
-        self.label = label
         self._prev = set(_children)
-        self._op = _op
         self._backward = lambda: None
 
     def __repr__(self):
         return f"Value(data={self.data}, grad={self.grad})"
 
     def __add__(self, other):
-        other = other if isinstance(other, Value) else Value(data=other, label=str(other))
+        other = other if isinstance(other, Value) else Value(data=other)
         data = self.data + other.data
-        label = self.label + "+" + other.label
-        out = Value(data=data, label=label, _children=(self, other), _op='+')
+        out = Value(data=data, _children=(self, other))
 
         def _backward():
             self.grad += out.grad
@@ -29,10 +24,9 @@ class Value:
         return out
 
     def __mul__(self, other):
-        other = other if isinstance(other, Value) else Value(data=other, label=str(other))
+        other = other if isinstance(other, Value) else Value(data=other)
         data = self.data * other.data
-        label = self.label + other.label
-        out = Value(data=data, label=label, _children=(self, other), _op='*')
+        out = Value(data=data, _children=(self, other))
 
         def _backward():
             self.grad += other.data * out.grad
@@ -44,8 +38,7 @@ class Value:
     def __pow__(self, other):
         assert isinstance(other, (int, float))
         data = self.data ** other
-        label = self.label + "**" + str(other)
-        out = Value(data=data, label=label, _children=(self,), _op=f'**{other}')
+        out = Value(data=data, _children=(self,))
 
         def _backward():
             self.grad += other * (self.data ** (other - 1)) * out.grad
@@ -80,8 +73,7 @@ class Value:
     def exp(self):
         x = self.data
         data = np.exp(x)
-        label = f"exp({self.label})"
-        out = Value(data=data, label=label, _children=(self,), _op='exp')
+        out = Value(data=data, _children=(self,))
 
         def _backward():
             self.grad += out.data * out.grad
@@ -92,8 +84,7 @@ class Value:
     def tanh(self):
         x = self.data
         data = (np.exp(2 * x) - 1) / (np.exp(2 * x) + 1)
-        label = f"tanh({self.label})"
-        out = Value(data=data, label=label, _children=(self,), _op='tanh')
+        out = Value(data=data, _children=(self,))
 
         def _backward():
             self.grad += (1 - data ** 2) * out.grad
@@ -104,8 +95,7 @@ class Value:
     def relu(self):
         x = self.data
         data = np.maximum(0, x)
-        label = f"relu({self.label})"
-        out = Value(data=data, label=label, _children=(self,), _op='relu')
+        out = Value(data=data, _children=(self,))
 
         def _backward():
             self.grad += (out.data > 0) * out.grad
@@ -115,9 +105,8 @@ class Value:
 
     def sigmoid(self):
         x = self.data
-        data = 1 / (1 + math.exp(-x))
-        label = f"sigmoid({self.label})"
-        out = Value(data=data, label=label, _children=(self,), _op='sigmoid')
+        data = 1 / (1 + np.exp(-x))
+        out = Value(data=data, _children=(self,))
 
         def _backward():
             self.grad += (data * 1 - data) * out.grad

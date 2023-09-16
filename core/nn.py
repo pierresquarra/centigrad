@@ -9,10 +9,14 @@ class Neuron:
         self.bias = Value(np.random.normal())
         self.parameters = self.weights + [self.bias]
 
-    def __call__(self, x):
+    def __call__(self, x: list):
+        assert len(self.weights) == len(x)
         act = sum((wi*xi for wi, xi in zip(self.weights, x)), self.bias)
-        out = act.tanh()
+        out = act.sigmoid()
         return out
+
+    def __repr__(self):
+        return f"Neuron with {len(self.weights)} inputs"
 
 
 class Layer:
@@ -34,13 +38,14 @@ class NN:
         self.layers = [Layer(self.layer_sizes[i], self.layer_sizes[i+1]) for i in range(len(num_outputs))]
         self.parameters = [p for layer in self.layers for p in layer.parameters]
 
-    def __call__(self, x):
+    def __call__(self, x: list):
+        assert self.layer_sizes[0] == len(x), "Input list isn't correct size"
         for layer in self.layers:
             x = layer(x)
         return x
 
     def __repr__(self):
-        return str(self.layers)
+        return f"NN with {len(self.layers)} layers"
 
     def zero_grad(self):
         for parameter in self.parameters:
