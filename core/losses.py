@@ -21,22 +21,7 @@ class MSELoss(_Loss):
 
 class CrossEntropyLoss(_Loss):
     def forward(self, predictions: np.ndarray, targets: np.ndarray, epsilon=1e-12):
-        assert predictions.shape[0] == targets.shape[0], "shapes don't align"
-        assert len(targets.shape) == 1, "targets must be 1D array"
-        size = predictions.shape[1]
-        predictions = np.clip(predictions, epsilon, 1. - epsilon)
-        if targets.dtype == 'O':
-            targets = np.eye(size)[[target.data for target in targets]]
-        else:
-            targets = np.eye(size)[targets]
-        # targets are not values anymore
-        return np.sum(-np.log(np.sum(predictions * targets, axis=1)))
-
-
-class CategoricalCrossEntropyLoss(_Loss):
-    def forward(self, predictions: np.ndarray, targets: np.ndarray, epsilon=1e-12):
         assert predictions.shape == targets.shape, "shapes don't align"
-        assert predictions.ndim == targets.ndim == 1, "inputs are not two dimensional"
         predictions = np.clip(predictions, epsilon, 1. - epsilon)
-        return -(np.sum(predictions * targets, axis=1)).log()
-
+        losses = -np.log(np.sum(predictions * targets, axis=1))
+        return np.sum(losses) / predictions.shape[0]

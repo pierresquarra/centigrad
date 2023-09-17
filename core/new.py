@@ -58,5 +58,5 @@ class Softmax(Module):
     def forward(self, inputs: np.ndarray):
         assert np.ndim(inputs) == 1, "input array is not 1D"
         assert inputs.dtype == 'O', "inputs are not value objects"
-        exp_values = np.array([value.exp() for value in inputs])
-        return np.array([exp_value / sum(exp_values) for exp_value in exp_values])
+        exp_values = np.array([np.exp(value) for value in inputs])
+        return np.array([exp_value / np.sum(exp_values) for exp_value in exp_values])
