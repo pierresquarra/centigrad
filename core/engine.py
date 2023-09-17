@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 
 
@@ -68,7 +70,20 @@ class Value:
         return other * self**-1
 
     def __lt__(self, other):
+        other = other if isinstance(other, Value) else Value(data=other)
         return self.data < other.data
+
+    def __gt__(self, other):
+        other = other if isinstance(other, Value) else Value(data=other)
+        return self.data > other
+
+    def __le__(self, other):
+        other = other if isinstance(other, Value) else Value(data=other)
+        return self.data <= other.data
+
+    def __ge__(self, other):
+        other = other if isinstance(other, Value) else Value(data=other)
+        return self.data >= other
 
     def exp(self):
         x = self.data
@@ -77,6 +92,18 @@ class Value:
 
         def _backward():
             self.grad += out.data * out.grad
+        out._backward = _backward
+
+        return out
+
+    def log(self):
+        x = self.data
+        assert x > 0, "cant log a negative number"
+        data = np.log(x)
+        out = Value(data=data, _children=(self,))
+
+        def _backward():
+            self.grad += (1 / x) * out.grad
         out._backward = _backward
 
         return out
@@ -129,3 +156,24 @@ class Value:
         self.grad = 1.0
         for node in reversed(topo):
             node._backward()
+
+
+class Tensor:
+    def __init__(self, data: np.ndarray):
+        self.data = np.vectorize(Value)(data)
+        self.shape = self.data.shape
+
+    def __repr__(self):
+        return f"Tensor with shape {self.shape}"
+
+    def parameters(self):
+        return list(self.data.flatten())
+
+    def __add__(self, other):
+        if isinstance(other, Tensor):
+            assert self.shape == other.shape, "tensor shapes don't match"
+            return Tensor(np.add(self.data, other.data))
+        return Tensor(self.data + other)
+
+    def __radd__(self, other):
+        return self + other
