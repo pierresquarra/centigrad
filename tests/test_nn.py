@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from core.nn import NN
+from centigrad.nn import NN
 
 
 class TestNN(TestCase):

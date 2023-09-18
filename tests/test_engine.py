@@ -1,6 +1,6 @@
 import torch
 from unittest import TestCase
-from core.engine import Value
+from centigrad.engine import Value
 
 
 class TestValue(TestCase):
