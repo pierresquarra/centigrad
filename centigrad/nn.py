@@ -16,8 +16,8 @@ class Module:
 
 class Linear(Module):
     def __init__(self, num_inputs, num_outputs, low=0.0, high=1.0):
-        self.weights = np.vectorize(Value)(np.random.uniform(low=low, high=high, size=(num_outputs, num_inputs)), label='w')
-        self.bias = np.vectorize(Value)(np.random.uniform(low=low, high=high, size=num_outputs), label='b')
+        self.weights = np.vectorize(Value)(np.random.uniform(low=low, high=high, size=(num_outputs, num_inputs)))
+        self.bias = np.vectorize(Value)(np.random.uniform(low=low, high=high, size=num_outputs))
 
     def __repr__(self):
         return str(self.parameters())
