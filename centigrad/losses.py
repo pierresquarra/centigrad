@@ -30,6 +30,5 @@ class CrossEntropyLoss(_Loss):
 class HingeLoss(_Loss):
     def forward(self, predictions: np.ndarray, targets: np.ndarray):
         assert predictions.shape == targets.shape, f"shapes {predictions.shape} and {targets.shape} don't align"
-        relus = np.array([v.relu() for v in targets])
-        losses = (1 + -targets * relus)
+        losses = np.maximum(0, (1 + -targets * predictions))
         return np.sum(losses) * (1.0 / losses.shape[0])
