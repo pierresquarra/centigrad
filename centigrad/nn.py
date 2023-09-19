@@ -15,20 +15,21 @@ class Module:
 
 
 class Linear(Module):
-    def __init__(self, num_inputs, num_outputs, low=0.0, high=1.0):
-        self.weights = np.vectorize(Value)(np.random.uniform(low=low, high=high, size=(num_outputs, num_inputs)))
-        self.bias = np.vectorize(Value)(np.random.uniform(low=low, high=high, size=num_outputs))
+    def __init__(self, num_inputs, num_outputs, bias=True):
+        self.weights = np.vectorize(Value)(np.random.randn(num_outputs, num_inputs))
+        # self.bias = np.vectorize(Value)(np.random.randn(num_outputs)) if bias else None
 
     def __repr__(self):
         return str(self.parameters())
 
     def forward(self, inputs: np.ndarray):
         assert np.ndim(inputs) == 1, "input array is not 1D"
-        assert self.weights.shape[1] == inputs.shape[0], "shapes of layer and inputs don't align"
-        return np.dot(self.weights, inputs) + self.bias
+        assert self.weights.shape[1] == inputs.shape[0], f"shapes of weights {self.weights.shape[1]} and inputs {inputs.shape[0]} don't align"
+        return np.dot(self.weights, inputs) # + self.bias
 
     def parameters(self):
-        return list(np.concatenate((self.weights.flatten(), self.bias)))
+        # return list(np.concatenate((self.weights.flatten(), self.bias)))
+        return list(self.weights.flatten())
 
 
 class Tanh(Module):
@@ -66,7 +67,7 @@ class Softmax(Module):
         return "Softmax layer"
 
     def forward(self, inputs: np.ndarray):
-        assert np.ndim(inputs) == 1, "input array is not 1D"
+        assert np.ndim(inputs) == 1, f"input array {inputs.shape} is not 1D"
         assert inputs.dtype == 'O', "inputs are not value objects"
-        exp_values = np.array([np.exp(value) for value in inputs])
+        exp_values = np.exp(inputs)
         return np.array([exp_value / np.sum(exp_values) for exp_value in exp_values])
