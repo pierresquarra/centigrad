@@ -4,11 +4,11 @@ from centigrad.engine import Value
 
 
 class Module:
-    def forward(self, inputs: np.ndarray):
+    def __call__(self, inputs: np.ndarray):
         raise NotImplementedError
 
-    def __call__(self, inputs: np.ndarray):
-        return self.forward(inputs)
+    def forward(self, inputs: np.ndarray):
+        return self(inputs)
 
     def parameters(self):
         return []
@@ -17,57 +17,77 @@ class Module:
 class Linear(Module):
     def __init__(self, num_inputs, num_outputs, bias=True):
         self.weights = np.vectorize(Value)(np.random.randn(num_outputs, num_inputs))
-        # self.bias = np.vectorize(Value)(np.random.randn(num_outputs)) if bias else None
+        self.bias = np.vectorize(Value)(np.random.randn(num_outputs)) if bias else None
 
     def __repr__(self):
         return str(self.parameters())
 
-    def forward(self, inputs: np.ndarray):
+    def __call__(self, inputs: np.ndarray):
         assert np.ndim(inputs) == 1, "input array is not 1D"
-        assert self.weights.shape[1] == inputs.shape[0], f"shapes of weights {self.weights.shape[1]} and inputs {inputs.shape[0]} don't align"
-        return np.dot(self.weights, inputs) # + self.bias
+        assert self.weights.shape[1] == inputs.shape[
+            0], f"shapes of weights {self.weights.shape[1]} and inputs {inputs.shape[0]} don't align"
+        self.out = np.dot(self.weights, inputs)
+        if self.bias is not None:
+            self.out += self.bias
+        return self.out
+
+    def forward(self, inputs: np.ndarray):
+        return self(inputs)
 
     def parameters(self):
-        # return list(np.concatenate((self.weights.flatten(), self.bias)))
-        return list(self.weights.flatten())
+        return self.weights.flatten().tolist() + (self.bias.tolist() if self.bias is not None else [])
 
 
 class Tanh(Module):
-    def __repr__(self):
-        return "Tanh layer"
-
-    def forward(self, inputs: np.ndarray):
+    def __call__(self, inputs: np.ndarray):
         assert np.ndim(inputs) == 1, "input array is not 1D"
         assert inputs.dtype == 'O', "inputs are not value objects"
-        return np.array([value.tanh() for value in inputs])
+        self.out = np.tanh(inputs)
+        return self.out
+
+    def forward(self, inputs: np.ndarray):
+        return self(inputs)
 
 
 class ReLU(Module):
-    def __repr__(self):
-        return "ReLu layer"
+    def __call__(self, inputs: np.ndarray):
+        assert np.ndim(inputs) == 1, f"input array is not 1D ({inputs.shape})"
+        assert inputs.dtype == 'O', f"inputs are not value objects ({inputs.dtype})"
+        self.out = np.array([value.relu() for value in inputs])
+        return self.out
 
     def forward(self, inputs: np.ndarray):
-        assert np.ndim(inputs) == 1, "input array is not 1D"
-        assert inputs.dtype == 'O', "inputs are not value objects"
-        return np.array([value.relu() for value in inputs])
+        return self(inputs)
 
 
 class Sigmoid(Module):
-    def __repr__(self):
-        return "Sigmoid layer"
+    def __call__(self, inputs: np.ndarray):
+        assert np.ndim(inputs) == 1, f"input array is not 1D ({inputs.shape})"
+        assert inputs.dtype == 'O', f"inputs are not value objects ({inputs.dtype})"
+        self.out = np.array([value.sigmoid() for value in inputs])
+        return self.out
 
     def forward(self, inputs: np.ndarray):
-        assert np.ndim(inputs) == 1, "input array is not 1D"
-        assert inputs.dtype == 'O', "inputs are not value objects"
-        return np.array([value.sigmoid() for value in inputs])
+        return self(inputs)
 
 
 class Softmax(Module):
-    def __repr__(self):
-        return "Softmax layer"
+    def __call__(self, inputs: np.ndarray):
+        assert np.ndim(inputs) == 1, f"input array is not 1D ({inputs.shape})"
+        assert inputs.dtype == 'O', f"inputs are not value objects ({inputs.dtype})"
+        self.out = np.array([np.exp(v) / np.sum(np.exp(inputs)) for v in inputs])
+        return self.out
 
     def forward(self, inputs: np.ndarray):
-        assert np.ndim(inputs) == 1, f"input array {inputs.shape} is not 1D"
-        assert inputs.dtype == 'O', "inputs are not value objects"
-        exp_values = np.exp(inputs)
-        return np.array([exp_value / np.sum(exp_values) for exp_value in exp_values])
+        return self(inputs)
+
+
+class LogSoftMax(Module):
+    def __call__(self, inputs: np.ndarray):
+        assert np.ndim(inputs) == 1, f"input array is not 1D ({inputs.shape})"
+        assert inputs.dtype == 'O', f"inputs are not value objects ({inputs.dtype})"
+        self.out = np.log([np.exp(v) / np.sum(np.exp(inputs)) for v in inputs])
+        return self.out
+
+    def forward(self, inputs: np.ndarray):
+        return self(inputs)
