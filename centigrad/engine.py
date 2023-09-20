@@ -47,14 +47,23 @@ class Value:
 
         return out
 
+    def __truediv__(self, other):
+        other = other if isinstance(other, Value) else Value(data=other)
+        data = self.data / other.data
+        out = Value(data=data, _children=(self, other), _op='/')
+
+        def _backward():
+            self.grad += out.grad / other.data
+            other.grad += -self.data * out.grad / (other.data ** 2)
+        out._backward = _backward
+
+        return out
+
     def __neg__(self):
         return self * -1
 
     def __sub__(self, other):
         return self + (-other)
-
-    def __truediv__(self, other):
-        return self * other**(-1)
 
     def __radd__(self, other):
         return self + other
