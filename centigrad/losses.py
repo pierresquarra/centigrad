@@ -15,7 +15,6 @@ class MSELoss(_Loss):
     def __call__(self, predictions: np.ndarray, targets: np.ndarray):
         """Computes the MSE loss between predictions and targets."""
         assert predictions.shape == targets.shape, f"shapes {predictions.shape} and {targets.shape} don't align"
-        assert predictions.ndim == 2, f"inputs are not two dimensional ({predictions.shape})"
         return np.mean((predictions - targets) ** 2)
 
 
@@ -24,12 +23,9 @@ class CrossEntropyLoss(_Loss):
 
     def __call__(self, predictions: np.ndarray, targets: np.ndarray):
         """Computes the cross entropy loss between predictions and targets"""
-        assert predictions.shape == targets.shape, f"shapes {predictions.shape[0]} and {targets.shape[0]} don't align"
-        assert predictions.ndim == 2, f"inputs are not two dimensional ({predictions.shape})"
-
+        assert predictions.shape == targets.shape, f"shapes {predictions.shape} and {targets.shape} don't align"
         predictions -= np.max(predictions, axis=1, keepdims=True)
         probs = np.exp(predictions) / np.sum(np.exp(predictions), axis=1, keepdims=True)
-
         return -np.mean(np.sum(targets * np.log(probs), axis=1))
 
 
