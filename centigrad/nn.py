@@ -5,19 +5,20 @@ from centigrad.engine import Value
 
 class Module:
     def __call__(self, inputs: np.ndarray):
-        raise NotImplementedError
+        return self.forward(inputs)
 
     def forward(self, inputs: np.ndarray):
-        return self(inputs)
+        raise NotImplementedError
 
     def parameters(self):
         return []
 
 
 class Linear(Module):
-    def __init__(self, num_inputs, num_outputs, bias=True):
-        self.weights = np.vectorize(Value)(np.random.randn(num_outputs, num_inputs))
-        self.bias = np.vectorize(Value)(np.random.randn(num_outputs)) if bias else None
+    def __init__(self, in_features, out_features, bias=True):
+        k = np.sqrt(1 / in_features)
+        self.weights = np.vectorize(Value)(np.random.uniform(low=-k, high=k, size=(out_features, in_features)))
+        self.bias = np.vectorize(Value)(np.random.uniform(low=-k, high=k, size=(out_features,))) if bias else None
 
     def __repr__(self):
         return str(self.parameters())
