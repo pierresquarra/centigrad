@@ -1,34 +1,42 @@
 import numpy as np
 
-from centigrad.nn import Module
 
-
-class _Loss(Module):
-    def forward(self, predictions: np.ndarray, targets: np.ndarray):
-        raise NotImplementedError
+class _Loss:
+    """A private base class for loss functions."""
 
     def __call__(self, predictions: np.ndarray, targets: np.ndarray):
-        return self.forward(predictions, targets)
+        """Computes the loss between predictions and targets."""
+        raise NotImplementedError
 
 
 class MSELoss(_Loss):
-    def forward(self, predictions: np.ndarray, targets: np.ndarray):
+    """Mean Squared Error (MSE) loss function."""
+
+    def __call__(self, predictions: np.ndarray, targets: np.ndarray):
+        """Computes the MSE loss between predictions and targets."""
         assert predictions.shape == targets.shape, f"shapes {predictions.shape} and {targets.shape} don't align"
-        assert predictions.ndim == targets.ndim == 1, "inputs are not one dimensional"
-        num_samples = predictions.shape[0]
-        return np.sum(((predictions - targets) ** 2)) / num_samples
+        assert predictions.ndim == 2, f"inputs are not two dimensional ({predictions.shape})"
+        return np.mean((predictions - targets) ** 2)
 
 
 class CrossEntropyLoss(_Loss):
-    def forward(self, predictions: np.ndarray, targets: np.ndarray, epsilon=1e-12):
-        assert predictions.shape == targets.shape, f"shapes {predictions.shape} and {targets.shape} don't align"
-        predictions = np.clip(predictions, epsilon, 1. - epsilon)
-        losses = -np.log(np.sum(predictions * targets, axis=1))
-        return np.sum(losses) / predictions.shape[0]
+    """Cross Entropy loss function."""
+
+    def __call__(self, predictions: np.ndarray, targets: np.ndarray):
+        """Computes the cross entropy loss between predictions and targets"""
+        assert predictions.shape == targets.shape, f"shapes {predictions.shape[0]} and {targets.shape[0]} don't align"
+        assert predictions.ndim == 2, f"inputs are not two dimensional ({predictions.shape})"
+
+        predictions -= np.max(predictions, axis=1, keepdims=True)
+        probs = np.exp(predictions) / np.sum(np.exp(predictions), axis=1, keepdims=True)
+
+        return -np.mean(np.sum(targets * np.log(probs), axis=1))
 
 
 class HingeLoss(_Loss):
-    def forward(self, predictions: np.ndarray, targets: np.ndarray):
+    """Hinge loss function."""
+
+    def __call__(self, predictions: np.ndarray, targets: np.ndarray):
+        """Computes the hinge loss between predictions and targets."""
         assert predictions.shape == targets.shape, f"shapes {predictions.shape} and {targets.shape} don't align"
-        losses = np.maximum(0, (1 + -targets * predictions))
-        return np.sum(losses) * (1.0 / losses.shape[0])
+        return np.mean(np.maximum(0, (1 - targets * predictions)))
