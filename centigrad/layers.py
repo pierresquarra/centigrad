@@ -74,3 +74,35 @@ class LogSoftmax(_Layer):
     def __call__(self, inputs: np.ndarray):
         self.out = np.log(np.exp(inputs) / np.sum(np.exp(inputs), axis=1, keepdims=True))
         return self.out
+
+
+class BatchNorm1d:
+    def __init__(self, dim, eps=1e-5, momentum=0.1):
+        self.eps = eps
+        self.momentum = momentum
+        self.training = True
+        # parameters (trained with backprop)
+        self.gamma = np.ones(dim)
+        self.beta = np.zeros(dim)
+        # buffers (trained with a running 'momentum update')
+        self.running_mean = np.zeros(dim)
+        self.running_var = np.ones(dim)
+
+    def __call__(self, inputs: np.ndarray):
+        if self.training:
+            xmean = np.mean(inputs, axis=0, keepdims=True)
+            xvar = np.var(inputs, axis=0, keepdims=True)
+        else:
+            xmean = self.running_mean
+            xvar = self.running_var
+        xhat = (inputs - xmean) / np.sqrt(xvar + self.eps)  # normalize to unit variance
+        self.out = self.gamma * xhat + self.beta
+        # update the buffers
+        if self.training:
+            with np.no_grad():
+                self.running_mean = (1 - self.momentum) * self.running_mean + self.momentum * xmean
+                self.running_var = (1 - self.momentum) * self.running_var + self.momentum * xvar
+        return self.out
+
+    def parameters(self):
+        return [self.gamma, self.beta]

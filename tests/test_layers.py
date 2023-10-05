@@ -5,7 +5,7 @@ import torch
 from torch import nn
 
 from centigrad.engine import Value
-from centigrad.layers import Linear, Tanh, ReLU, Softmax, Sigmoid, LogSoftmax
+from centigrad.layers import Linear, Tanh, ReLU, Softmax, Sigmoid, LogSoftmax, BatchNorm1d
 
 
 class TestLinear(TestCase):
@@ -82,6 +82,14 @@ class TestActivations(TestCase):
         pt = nn.LogSoftmax(dim=1)
         pt_out = pt(self.pt_in)
         cg = LogSoftmax()
+        cg_out = cg(self.cg_in)
+        cg_ten = torch.tensor(np.vectorize(lambda x: x.data)(cg_out)).float()
+        self.assertTrue(torch.allclose(pt_out, cg_ten, rtol=1e-3))
+
+    def test_batch_norm_1d(self):
+        pt = nn.BatchNorm1d(12)
+        pt_out = pt(self.pt_in)
+        cg = BatchNorm1d(12)
         cg_out = cg(self.cg_in)
         cg_ten = torch.tensor(np.vectorize(lambda x: x.data)(cg_out)).float()
         self.assertTrue(torch.allclose(pt_out, cg_ten, rtol=1e-3))
